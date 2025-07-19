@@ -62,7 +62,6 @@ class MouzeSimulation
     //da cobra
     bool dead = false;
     Point head_mouse;
-    Dir direction_snake;
     
    public:
     static MouzeSimulation& instance();

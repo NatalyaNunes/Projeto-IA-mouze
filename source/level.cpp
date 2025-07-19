@@ -21,7 +21,7 @@ void Level::find_start_position(){
                 start_mouse = {i, j};
             }else if(board[i][j] == '@'){
                 Point m_dif = {i, j};
-                medium_dificulty.push_back(m_dif);
+                high_dificulty.push_back(m_dif);
             }else if(board[i][j] == '%'){
                 Point h_dif = {i, j};
                 medium_dificulty.push_back(h_dif);
@@ -110,6 +110,18 @@ void Level::reset_level(bool initial_level){
 void Level::fill_data(Point head, bool dead){
     for(int i=0;i<rows;++i){
         for(int j=0;j<cols;++j){
+            for(auto m : medium_dificulty){
+                if(m.x == i && m.y == j){
+                    board[i][j] = '%';
+                }
+            }
+            
+            for(auto h : high_dificulty){
+                if(h.x == i && h.y == j){
+                    board[i][j] = '@';
+                }
+            }
+
             if(head.x == i && head.y == j){
                 if(dead){
                     board[i][j] = 'X';//morreu
@@ -142,7 +154,7 @@ char Level::get_cell(const Level& level, const Point& p) {
  */
 
 bool Level::is_empty_cell(char cell) {
-    return cell == ' ' || cell == 'C';
+    return cell == ' ' || cell == 'C' || cell == '@'|| cell == '%';
 }
 
 

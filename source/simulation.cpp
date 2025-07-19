@@ -29,7 +29,7 @@ MouzeSimulation::MouzeSimulation() : game_state(GameState::START){
     fps = 300;
     lives = 5;
     food = 10;
-    player_type = "backtracking";
+    player_type = "A*";
 }
 
 void MouzeSimulation::parse_config(const std::string& filename){
@@ -219,8 +219,6 @@ void MouzeSimulation::process_events(){
                
             if(idx_path < path_execute.size()){
                 Point next_head_snake = path_execute[idx_path];
-                //definir direção atual da cobra
-                direction_snake = player->path_direction[idx_path];
                 ++idx_path;
                 
                 char next_cell = level.get_cell(current_level, next_head_snake);
@@ -241,10 +239,42 @@ void MouzeSimulation::process_events(){
                 }
             }
         }else if(player_type == "A*"){
+            if(search_food || idx_path >= path_execute.size()){
+                player->computed_path_A(head_mouse);
+                path_execute.clear();
+                path_execute = player->path;
+                idx_path = 0;
+                search_food = false;
+            }
+               for(auto p : path_execute){
+                std::cout << "x: " << p.x <<" , y: "<<p.y<<"\n";
+               }
+               
+            if(idx_path < path_execute.size()){
+                ++idx_path;
+                Point next_head_snake = path_execute[idx_path];
+                //++idx_path;
+                
+                char next_cell = level.get_cell(current_level, next_head_snake);
+                std::cout<<"x: "<< next_cell <<"\n";
 
+                if (level.is_empty_cell(next_cell)) {
+                    has_none = true;
+                    head_mouse = next_head_snake;
+                } else if (level.is_food(next_cell)) {
+                    has_food = true;
+                    head_mouse = next_head_snake;
+                    levels[current_level_idx].current_mouse = head_mouse;
+                    levels[current_level_idx].update_board_after_food(); // para limpar a comida
+                    idx_path = 0;
+                    search_food = true;
+                } else {
+                    has_wall = true;
+                    dead = true;
+                }
+            }
         }else{     
             Point next_head_snake = player->computed_random(head_mouse);
-            direction_snake = player->get_direction();
 
             char next_cell = level.get_cell(current_level, next_head_snake);
 
@@ -276,7 +306,6 @@ void MouzeSimulation::process_events(){
         player->increase_mouse_size();
     }else if(game_state == GameState::CRASHED){
         initial_level = true;//p cabeça voltar p ponto de spaw
-        direction_snake = {Dir::N};
         //pressionar enter
         std::string line;
         std::getline(std::cin, line);

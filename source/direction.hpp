@@ -13,8 +13,13 @@
 struct Point{
     int x;
     int y;
+    
     bool operator==(const Point& other) const {
         return x == other.x && y == other.y;
+    }
+
+    bool operator!=(const Point& other) const {
+    return !(*this == other);
     }
 
     bool operator<(const Point& other) const {
@@ -25,6 +30,19 @@ struct Point{
     return y < other.y;
     }
 };
+
+namespace std {
+    template <>
+    struct hash<Point> {
+        size_t operator()(const Point& p) const {
+            // Combine the hashes of x and y
+            auto hash_x = std::hash<int>{}(p.x);
+            auto hash_y = std::hash<int>{}(p.y);
+            // A common way to combine hashes
+            return hash_x ^ (hash_y << 1);
+        }
+    };
+}
 
 /**
  * @brief Direction enum for movement in the grid.

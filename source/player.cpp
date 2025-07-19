@@ -198,3 +198,99 @@ Point Player::computed_random(const Point& head_mouse){
 Dir Player::get_direction(){
     return direction_head;
 }
+
+//Busca A* e suas funções necessárias
+void Player::computed_path_A(Point head_mouse) {
+    path.clear();
+    path_valid = false;
+
+    const int rows = level.rows;
+    const int cols = level.cols;
+
+    Point start = head_mouse;
+    Point goal;
+    bool found_goal = false;
+
+    // CORREÇÃO DE INDEXAÇÃO: Usando [j][i] para corresponder a [x][y]
+    for (int i = 0; i < rows && !found_goal; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (level.board[i][j] == '*') {
+                goal = {i, j};
+                found_goal = true;
+                break;
+            }
+        }
+    }
+
+    if (!found_goal) {
+        return;
+    }
+
+    using State = std::tuple<int, Point>; // Simplificado: Apenas prioridade e ponto
+    std::priority_queue<State, std::vector<State>, std::greater<>> open;
+    
+    std::unordered_map<Point, Point> came_from;
+    std::unordered_map<Point, int> cost_so_far;
+
+    auto heuristic = [](Point a, Point b) {
+        return abs(a.x - b.x) + abs(a.y - b.y);
+    };
+
+    open.emplace(heuristic(start, goal), start);
+    came_from[start] = start;
+    cost_so_far[start] = 0;
+
+    std::vector<Point> moves = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
+
+    while (!open.empty()) {
+        auto [priority, current] = open.top();
+        open.pop();
+
+        if (current == goal) {
+            path_valid = true;
+            break;
+        }
+
+        for (auto move : moves) {
+            Point next = {current.x + move.x, current.y + move.y};
+
+            if (!is_valid(next)) {
+                continue;
+            }
+
+            int terrain_cost = get_terrain_cost(next);
+            int new_cost = cost_so_far[current] + terrain_cost;
+
+            if (cost_so_far.find(next) == cost_so_far.end() || new_cost < cost_so_far[next]) {
+                cost_so_far[next] = new_cost;
+                int new_priority = new_cost + heuristic(next, goal);
+                open.emplace(new_priority, next);
+                came_from[next] = current;
+            }
+        }
+    }
+    
+    if (path_valid) {
+        Point current = goal;
+        while (current != start) {
+            path.push_back(current);
+            current = came_from.at(current);
+        }
+        path.push_back(start);
+        std::reverse(path.begin(), path.end());
+    }
+}
+
+int Player::get_terrain_cost(Point p) {
+    // Make sure the point is valid before checking the board
+    if (p.y < 0 || p.y >= level.rows || p.x < 0 || p.x >= level.cols) {
+        return 9999; 
+    }
+
+    char tile = level.board[p.y][p.x]; // Standard [row][col] access
+    switch (tile) {
+        case '@': return 10; // High difficulty
+        case '%': return 5;  // Medium difficulty
+        default:  return 1;  // Normal ground
+    }
+}

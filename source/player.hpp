@@ -14,6 +14,9 @@
 #include <queue>
 #include <set>
 #include <stack>
+#include <unordered_map>
+#include <tuple>
+#include <cmath>
 
 struct PathUnit{
     Point current_pos;
@@ -32,6 +35,7 @@ class Player{
 
         std::vector<Point> path;
         void computed_path_bt(Point head_mouse);
+        void computed_path_A(Point head_mouse);
         bool has_path() const;
         bool get_valid_path() const;
         Dir get_direction();
@@ -46,6 +50,8 @@ class Player{
         std::vector<Point> get_path() const{
             return path;
         }
+
+        int get_terrain_cost(Point p);
         
     private:
         const Level& level;
